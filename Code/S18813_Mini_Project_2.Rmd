@@ -1,0 +1,142 @@
+---
+title: "S18813_mini_project_2"
+author: "S/18/813"
+date: "2024-05-30"
+output:
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### importing the packages
+```{r}
+library(tidyverse)
+require(ggplot2)
+require(GGally)
+require(CCA)
+require(CCP)
+```
+
+### Loading the datasets
+```{r}
+bioData <- read_csv("../Data/bioData.csv")
+chemData <- read_csv("../Data/chemData.csv")
+```
+
+### Viewing Two 
+```{r}
+head(bioData)
+head(chemData)
+```
+
+### Combining two data set
+```{r}
+mergedData <- merge(bioData, chemData, by = "Kod_Canoco")
+```
+
+```{r}
+head(mergedData)
+```
+
+### Renaming Dataset
+```{r}
+old_names <- c("Kod_Canoco", "SaprInd", "Lital", "RETI", "EPTAbu", "Marg", "Metaritr",
+               "JepAbu", "Epiritral", "Hyporitral", "Ntaxon", "Nceled", "Bindex", "EPTTax",
+               "PosAbu", "Spasaci", "MDS_1", "MDS_2", "Tepl_max", "%O2", "BSK5", "Kond",
+               "N-NH4", "N-NO3", "Pcelk")
+new_names <- c("Site_Code", "Saprobic_Index", "Littoral_Abundance", "Retention_Index", 
+               "EPT_Abundance", "Margalef_Index", "Metarhithral_Abundance", "Jep_Abundance", 
+               "Epiritral_Abundance", "Hyporitral_Abundance", "Number_of_Taxa", "Number_of_Cephalopods",
+               "Biotic_Index", "EPT_Taxa", "Positive_Abundance", "Spasaci_Index", "MDS_1", "MDS_2",
+               "Max_Temperature", "Oxygen_Percentage", "Biochemical_Oxygen_Demand", "Conductivity",
+               "Ammonium_Nitrogen", "Nitrate_Nitrogen", "Total_Phosphorus")
+
+colnames(mergedData) <- new_names[match(colnames(mergedData), old_names)]
+
+```
+
+```{r}
+head(mergedData)
+```
+### Selecting subset
+```{r}
+bio <- mergedData[,2:8]
+chem <- mergedData[,19:23]
+```
+
+### Correlation plot for bio data
+```{r}
+ggpairs(bio)
+```
+
+### Correlation plot for chem data
+```{r}
+ggpairs(chem)
+```
+
+```{r}
+matcor(bio, chem)
+```
+
+##Canonical Correlation Analysis
+
+### Canonical Correlations
+```{r}
+cc1 <- cc(bio, chem)
+cc1$cor
+
+```
+### Canonical Coefficients
+```{r}
+cc1[3:4]
+```
+
+### Canonical Loadings
+```{r}
+cc2 <- comput(bio, chem, cc1)
+cc2[3:6]
+```
+
+### Tests Of Canonical Dimension
+```{r}
+rho <- cc1$cor
+
+n <- dim(bio)[1] # number of observations
+p <- length(bio) # number of variables in first set
+q <- length(chem)  # number of variables in the second set
+```
+
+#### Wilks Test
+```{r}
+p.asym(rho, n, p, q, tstat = "Wilks")
+```
+
+#### Hotelling Test
+```{r}
+p.asym(rho, n, p, q, tstat = "Hotelling")
+```
+
+#### Pillai Test
+```{r}
+p.asym(rho, n, p, q, tstat = "Pillai")
+```
+
+#### Roy Test
+```{r}
+p.asym(rho, n, p, q, tstat = "Roy")
+```
+### standardized bio canonical coefficients
+```{r}
+s1 <- diag(sqrt(diag(cov(bio))))
+s1 %*% cc1$xcoef
+```
+
+### standardized chem canonical coefficients
+```{r}
+s2 <- diag(sqrt(diag(cov(chem))))
+s2 %*% cc1$ycoef
+```
+
